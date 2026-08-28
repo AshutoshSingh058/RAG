@@ -24,3 +24,5 @@ beautifulsoup4
 #Observability & Distributed Tracing
 logfire[fastapi, requests]
 loguru
+
+flashrank
