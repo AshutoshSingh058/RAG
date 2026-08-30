@@ -59,6 +59,7 @@ def generate_node(state: AgentState):
     with logfire.span("✍️ LLM Synthesis"):
         try:
             response = portkey_client.chat.completions.create(
+                model="@rag1/openai/gpt-oss-120b",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1
             )
