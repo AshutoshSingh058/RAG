@@ -100,3 +100,18 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
         with logfire.span("Embed batch", model=_model_type, start=i, size=len(batch)):
             all_embeddings.extend(_embed_batch(batch))
     return all_embeddings
+
+
+
+"""
+We process chunks in batches because embedding models are designed to handle multiple texts efficiently.
+
+Why batches are beneficial:
+
+Faster: One model/API call processes many chunks, reducing call overhead.
+Fewer API requests: For Gemini, 1,000 chunks can be sent in 20 requests of 50 instead of 1,000 requests.
+Lower overhead and cost: Every request has network and processing overhead.
+Better hardware usage: Local models can process multiple texts using vectorized CPU/GPU operations.
+Easier rate-limit management: Retry logic can retry one failed batch instead of managing thousands of 
+individual calls.
+"""

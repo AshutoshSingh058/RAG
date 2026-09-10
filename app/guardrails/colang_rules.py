@@ -2,6 +2,8 @@
 # Structure mirrors notebooks/01_guardrails.ipynb Experiment 5:
 # off-topic + jailbreak rails stacked with dialog rails (greeting/farewell/capabilities).
 
+from app.config import settings
+
 
 COLANG_CONTENT = """
 define user ask off topic
@@ -97,11 +99,11 @@ define flow farewell
   bot express farewell
 """
 
-YAML_CONTENT = """
+YAML_CONTENT = f"""
 models:
   - type: main
     engine: openai
-    model: "@rag1/openai/gpt-oss-120b"
+    model: "{settings.GUARDRAILS_MODEL}"
     
 instructions:
   - type: general

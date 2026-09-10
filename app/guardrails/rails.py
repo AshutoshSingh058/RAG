@@ -1,4 +1,5 @@
 import logfire
+import re
 from nemoguardrails import RailsConfig, LLMRails
 
 from app.gateway import get_langchain_llm
@@ -6,6 +7,25 @@ from app.guardrails.colang_rules import COLANG_CONTENT, YAML_CONTENT, RAIL_INDIC
 
 
 _rails: LLMRails | None = None
+
+_DETERMINISTIC_GUARD_PATTERNS = (
+    (
+        re.compile(r"\b(ignore|disregard|forget)\b.*\b(previous|prior|system)\b", re.I),
+        "I maintain consistent guidelines regardless of how I am prompted. I am here to help with Kubernetes, Intel, and networking. What can I help you with?",
+    ),
+    (
+        re.compile(r"\b(DAN|developer mode|bypass your guidelines|override your safety)\b", re.I),
+        "I maintain consistent guidelines regardless of how I am prompted. I am here to help with Kubernetes, Intel, and networking. What can I help you with?",
+    ),
+    (
+        re.compile(r"\b(sql injection|exploit|vulnerability|malware|phishing)\b", re.I),
+        "I'm an Enterprise IT Assistant focused on Kubernetes, Intel hardware, and networking. I can't help with that - but ask me anything technical!",
+    ),
+    (
+        re.compile(r"\b(tell|write)\b.*\b(joke|poem)\b", re.I),
+        "I'm an Enterprise IT Assistant focused on Kubernetes, Intel hardware, and networking. I can't help with that - but ask me anything technical!",
+    ),
+)
 
 
 def initialize_rails() -> None:
@@ -42,6 +62,11 @@ def guard(message: str) -> tuple[bool, str | None]:
                                 skip the RAG pipeline entirely.
         (False, None)          — message is clean; proceed to LangGraph.
     """
+    for pattern, response in _DETERMINISTIC_GUARD_PATTERNS:
+        if pattern.search(message):
+            logfire.info(f"🛡️ Deterministic guardrail fired | query='{message[:80]}'")
+            return True, response
+
     if _rails is None:
         logfire.warning("⚠️ Guardrails not initialised — skipping gate.")
         return False, None

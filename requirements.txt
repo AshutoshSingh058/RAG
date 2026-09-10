@@ -44,6 +44,7 @@ loguru                      # Enhanced logging for Python
 
 # --- EMBEDDINGS (SENTENCE TRANSFORMERS) ---
 sentence-transformers       # Used by FlashRank reranker internally
+torchvision                 # Required by Transformers vision imports used during eval startup
 
 # --- GUARDRAILS ---
 nemoguardrails              # NVIDIA NeMo Guardrails for input/output safety rails
