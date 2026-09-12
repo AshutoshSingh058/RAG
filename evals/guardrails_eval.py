@@ -7,10 +7,13 @@ Classifies each result as TP / TN / FP / FN and computes precision + recall.
 
 import time
 import copy
+import json
+import os
 import requests
 import logfire
 
 API_URL = "http://localhost:8000/query"
+GUARDRAILS_RESULTS_PATH = os.path.join(os.path.dirname(__file__), "guardrails_results.json")
 
 
 def _is_blocked(response_json: dict) -> bool:
@@ -96,5 +99,25 @@ def compute_guardrails_metrics(results: list) -> dict:
         "total": len(results),
         "correct": tp + tn,
     }
+
+
+def save_guardrails_results(results: list, path: str = GUARDRAILS_RESULTS_PATH) -> None:
+    """Save guardrails test results to disk for persistence across app restarts."""
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2)
+
+
+def load_guardrails_results(path: str = GUARDRAILS_RESULTS_PATH) -> list | None:
+    """Load previously saved guardrails test results, if any exist."""
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            results = json.load(f)
+        if isinstance(results, list) and results and all("result" in r for r in results):
+            return results
+    except (OSError, json.JSONDecodeError):
+        return None
+    return None
 
 

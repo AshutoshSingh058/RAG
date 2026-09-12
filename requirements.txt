@@ -44,6 +44,8 @@ loguru                      # Enhanced logging for Python
 
 # --- EMBEDDINGS (SENTENCE TRANSFORMERS) ---
 sentence-transformers       # Used by FlashRank reranker internally
+                            # ⚠️ NOTE: sentence-transformers/all-MiniLM-L6-v2 (~90MB) downloaded during eval Phase 2
+                            # Cached locally in ~/.cache/huggingface/hub/ after first run
 torchvision                 # Required by Transformers vision imports used during eval startup
 
 # --- GUARDRAILS ---
@@ -59,4 +61,5 @@ ragas                       # RAG-specific evaluation metrics (Faithfulness, Rel
 deepeval                    # Pytest-compatible test runner wrapping RAGAS & safety metrics
 langfuse                    # Live production monitoring, tracing & user feedback collection
 pandas                      # DataFrames for the eval Streamlit app's result tables
-openai                      # AsyncOpenAI client used directly by the RAGAS judge LLM
+openai>=2.0.0,<3.0.0        # AsyncOpenAI client used directly by the RAGAS judge LLM
+jiter>=0.6.1,<0.15          # Version range required by Instructor, used by RAGAS

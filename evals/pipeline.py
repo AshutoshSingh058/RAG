@@ -88,13 +88,13 @@ def run_pipeline(golden_dataset: dict, progress_callback=None) -> dict:
                 except requests.exceptions.ConnectionError:
                     logfire.error("❌ Cannot reach FastAPI — is the app running on :8000?")
                     sample["actual_response"] = ""
-                    sample["actual_contexts"] = sample.get("relevant_contexts", [])
+                    sample["actual_contexts"] = []
                     sample["actual_tools_called"] = ["unknown"]
 
                 except Exception as e:
                     logfire.error(f"❌ Query failed: {e}")
                     sample["actual_response"] = ""
-                    sample["actual_contexts"] = sample.get("relevant_contexts", [])
+                    sample["actual_contexts"] = []
                     sample["actual_tools_called"] = ["unknown"]
 
             if progress_callback:

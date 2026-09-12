@@ -1,5 +1,5 @@
 """
-Phase 2 — RAGAS + Tool Correctness metrics.
+Phase 2 — RAGAS metrics.
 All LLM-based metrics use the Portkey eval route and its configured model fallbacks.
 Metrics run one sample at a time with cooldowns to reduce provider rate-limit pressure.
 Contexts are truncated to 300 chars (2 chunks max) so no single request exceeds the limit.
@@ -27,6 +27,9 @@ from ragas.metrics.collections import (
     ContextRecall,
     AnswerCorrectness,
 )
+
+# HuggingFace cache directory (set in app.config)
+_HF_CACHE_DIR = os.environ.get("HF_HOME")
 
 JUDGE_MODEL = settings.EVAL_MODEL
 JUDGE_RETRY_STATUS_CODES = {404, 408, 429, 500, 502, 503, 504}
@@ -56,7 +59,9 @@ def load_metric_results(path: str = METRICS_RESULTS_PATH, sample_count: int | No
         return {}
     if sample_count is not None and checkpoint.get("sample_count") != sample_count:
         return {}
-    return checkpoint.get("results", {})
+    results = checkpoint.get("results", {})
+    results.pop("tool_correctness", None)
+    return results
 
 
 def _save_metric_results(results: dict, sample_count: int, path: str = METRICS_RESULTS_PATH) -> None:
@@ -164,6 +169,7 @@ def _build_judge():
     embeddings = HuggingFaceEmbeddings(
         model="sentence-transformers/all-MiniLM-L6-v2",
         use_api=False,
+        cache_folder=_HF_CACHE_DIR,  # Persist to venv .hf_cache/ directory
     )
     return llm, embeddings
 
@@ -190,7 +196,7 @@ def _prep_samples(golden_dataset: dict) -> list:
         response = s.get("actual_response", "").strip()
         if not response:
             continue
-        raw_contexts = s.get("actual_contexts") or s.get("relevant_contexts") or []
+        raw_contexts = s.get("actual_contexts") or []
         contexts = [c[:CONTEXT_TRUNCATE] for c in raw_contexts[:CONTEXT_LIMIT]]
         valid.append({**s, "actual_contexts": contexts})
     return valid
@@ -249,7 +255,7 @@ async def run_all_metrics(
     checkpoint_path: str = METRICS_RESULTS_PATH,
 ) -> dict:
     """
-    Runs all 6 experiments. Returns dict keyed by metric name → DataFrame.
+    Runs all 5 RAGAS experiments. Returns dict keyed by metric name → DataFrame.
     status_cb(message: str) is called for live UI updates.
     """
     judge_llm, ragas_embeddings = _build_judge()
@@ -365,24 +371,7 @@ async def run_all_metrics(
             save_metric("answer_correctness", df)
             logfire.info("🧪 Answer Correctness done", avg=round(df["answer_correctness"].mean(), 3))
 
-        await _cooldown(COOLDOWN_STANDARD, "Answer Correctness", status_cb)
-
-        # ── Exp 6: Tool Correctness (no LLM — Jaccard) ───────────────────────
         if status_cb:
-            status_cb("⚡ Exp 6/6 — Tool Correctness (zero LLM calls)...")
-        with logfire.span("🧪 Exp 6 — Tool Correctness"):
-            tool_rows = []
-            for s in samples:
-                called = set(s.get("actual_tools_called") or [])
-                expected = set(s.get("expected_tools") or [])
-                union = len(called | expected)
-                score = len(called & expected) / union if union > 0 else 0.0
-                tool_rows.append({"question": s["question"][:65], "tool_correctness": round(score, 3)})
-            df = pd.DataFrame(tool_rows)
-            save_metric("tool_correctness", df)
-            logfire.info("🧪 Tool Correctness done", avg=round(df["tool_correctness"].mean(), 3))
-
-        if status_cb:
-            status_cb("✅ All 6 experiments complete!")
+            status_cb("✅ All 5 experiments complete!")
 
     return results

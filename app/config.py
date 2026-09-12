@@ -1,10 +1,19 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
+# Set HuggingFace cache to persistent location in venv
+_HF_CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".hf_cache")
+Path(_HF_CACHE_DIR).mkdir(exist_ok=True)
+os.environ["HF_HOME"] = _HF_CACHE_DIR
+
 class Settings:
+    # --- HUGGINGFACE EMBEDDINGS CACHE ---
+    HF_HOME = _HF_CACHE_DIR
+    
     # --- GEMINI EMBEDDINGS ---
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 

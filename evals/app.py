@@ -22,8 +22,8 @@ import streamlit as st
 nest_asyncio.apply()
 
 from evals.pipeline import RESULTS_PATH, run_pipeline, save_results, load_results, load_golden_dataset
-from evals.guardrails_eval import run_guardrails_eval, compute_guardrails_metrics
-from evals.metrics import METRICS_RESULTS_PATH, run_all_metrics
+from evals.guardrails_eval import run_guardrails_eval, compute_guardrails_metrics, GUARDRAILS_RESULTS_PATH, save_guardrails_results, load_guardrails_results
+from evals.metrics import METRICS_RESULTS_PATH, run_all_metrics, load_metric_results
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Page config
@@ -82,6 +82,34 @@ def _run_async(coro):
     return loop.run_until_complete(coro)
 
 
+def _load_metric_results_from_disk() -> dict | None:
+    """
+    Load metric results from disk and reconstruct as DataFrames.
+    Returns dict of {metric_name: DataFrame} or None if not found.
+    
+    Note: DataFrames will contain questions + metric scores, but questions
+    are sourced from the saved checkpoint, so they're accurate as long as
+    samples haven't changed.
+    """
+    checkpoint = load_metric_results(METRICS_RESULTS_PATH)
+    if not checkpoint:
+        return None
+    
+    result_dfs = {}
+    metric_names = ["faithfulness", "answer_relevancy", "context_precision", "context_recall", "answer_correctness"]
+    
+    for metric_key in metric_names:
+        if metric_key in checkpoint:
+            scores = checkpoint[metric_key]
+            # Reconstruct minimal DataFrame: index + metric scores
+            # Questions are lost during save, but scores are preserved
+            result_dfs[metric_key] = pd.DataFrame({
+                metric_key: scores
+            })
+    
+    return result_dfs if result_dfs else None
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Session state init
 # ─────────────────────────────────────────────────────────────────────────────
@@ -93,9 +121,9 @@ if "enriched_dataset" not in st.session_state:
     st.session_state.enriched_dataset = load_results()
     st.session_state.pipeline_done = st.session_state.enriched_dataset is not None
 if "guardrails_results" not in st.session_state:
-    st.session_state.guardrails_results = None
+    st.session_state.guardrails_results = load_guardrails_results()
 if "metric_results" not in st.session_state:
-    st.session_state.metric_results = None
+    st.session_state.metric_results = _load_metric_results_from_disk()
 if "pipeline_rows" not in st.session_state:
     st.session_state.pipeline_rows = []
 
@@ -202,6 +230,8 @@ with tab2:
         st.session_state.pipeline_rows = []
         if os.path.exists(RESULTS_PATH):
             os.remove(RESULTS_PATH)
+        if os.path.exists(GUARDRAILS_RESULTS_PATH):
+            os.remove(GUARDRAILS_RESULTS_PATH)
         if os.path.exists(METRICS_RESULTS_PATH):
             os.remove(METRICS_RESULTS_PATH)
         st.rerun()
@@ -261,6 +291,7 @@ with tab2:
             g_results = run_guardrails_eval(enriched["guardrails_samples"], progress_callback=g_cb)
             g_metrics = compute_guardrails_metrics(g_results)
             st.session_state.guardrails_results = g_results
+            save_guardrails_results(g_results)  # Persist to disk
             st.session_state.pipeline_done = True
 
         g_progress.progress(100, text="✅ Guardrails tests complete!")
@@ -328,13 +359,13 @@ with tab2:
 # TAB 3 — Eval Metrics
 # ═════════════════════════════════════════════════════════════════════════════
 with tab3:
-    st.subheader("Eval Metrics — RAGAS + Tool Correctness")
+    st.subheader("Eval Metrics — RAGAS")
 
     if not st.session_state.pipeline_done:
         st.warning("⚠️ Complete Step 2 (Live Pipeline) first to collect responses.")
     else:
         st.markdown(
-            "Runs all **6 metric experiments** on the stored responses. "
+            "Runs all **5 RAGAS metric experiments** on the stored responses. "
             "LLM-based metrics use the Portkey eval route — samples are scored one at a time "
             "with 40s cooldowns between samples to stay within the provider's token limit. "
             "Total runtime: ~50 min."
@@ -366,7 +397,6 @@ with tab3:
                 "context_precision": "Exp 3 — Context Precision",
                 "context_recall":    "Exp 4 — Context Recall",
                 "answer_correctness":"Exp 5 — Answer Correctness",
-                "tool_correctness":  "Exp 6 — Tool Correctness",
             }
             for key, title in metric_display_names.items():
                 results_slots[key] = st.empty()
@@ -384,7 +414,7 @@ with tab3:
                 )
                 st.session_state.metric_results = metric_results
 
-            status_slot.success("✅ All 6 experiments complete!")
+            status_slot.success("✅ All 5 experiments complete!")
 
             for key, title in metric_display_names.items():
                 if key in metric_results:
@@ -399,7 +429,6 @@ with tab3:
                 "context_precision": "Exp 3 — Context Precision",
                 "context_recall":    "Exp 4 — Context Recall",
                 "answer_correctness":"Exp 5 — Answer Correctness",
-                "tool_correctness":  "Exp 6 — Tool Correctness",
             }
             for key, title in metric_display_names.items():
                 if key in st.session_state.metric_results:
@@ -417,7 +446,6 @@ with tab3:
                 ("Context Precision",  mr.get("context_precision", pd.DataFrame()).get("context_precision", pd.Series()).mean()),
                 ("Context Recall",     mr.get("context_recall",    pd.DataFrame()).get("context_recall",    pd.Series()).mean()),
                 ("Answer Correctness", mr.get("answer_correctness",pd.DataFrame()).get("answer_correctness",pd.Series()).mean()),
-                ("Tool Correctness",   mr.get("tool_correctness",  pd.DataFrame()).get("tool_correctness",  pd.Series()).mean()),
             ]
 
             cols = st.columns(len(summary))

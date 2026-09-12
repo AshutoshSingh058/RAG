@@ -8,4 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
-.env 
+.env
+
+# HuggingFace model cache (persistent in venv, not committed)
+.hf_cache/
