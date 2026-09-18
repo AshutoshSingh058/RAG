@@ -97,15 +97,16 @@ def _load_metric_results_from_disk() -> dict | None:
     
     result_dfs = {}
     metric_names = ["faithfulness", "answer_relevancy", "context_precision", "context_recall", "answer_correctness"]
+    if not all(metric_key in checkpoint for metric_key in metric_names):
+        return None
     
     for metric_key in metric_names:
-        if metric_key in checkpoint:
-            scores = checkpoint[metric_key]
-            # Reconstruct minimal DataFrame: index + metric scores
-            # Questions are lost during save, but scores are preserved
-            result_dfs[metric_key] = pd.DataFrame({
-                metric_key: scores
-            })
+        scores = checkpoint[metric_key]
+        # Reconstruct minimal DataFrame: index + metric scores
+        # Questions are lost during save, but scores are preserved
+        result_dfs[metric_key] = pd.DataFrame({
+            metric_key: scores
+        })
     
     return result_dfs if result_dfs else None
 

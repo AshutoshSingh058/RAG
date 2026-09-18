@@ -11,6 +11,7 @@ import asyncio
 import json
 import logfire
 import pandas as pd
+from datetime import datetime, timezone
 from openai import APIConnectionError, APITimeoutError, AsyncOpenAI
 from portkey_ai import PORTKEY_GATEWAY_URL, createHeaders
 
@@ -42,6 +43,7 @@ JUDGE_RETRY_DELAY = 5
 CONTEXT_TRUNCATE = 300  # chars per context chunk — reduces single request from ~7,700 to ~400 tokens
 CONTEXT_LIMIT = 2       # number of context chunks passed to RAGAS per sample
 METRICS_RESULTS_PATH = os.path.join(os.path.dirname(__file__), "metrics_results.json")
+METRICS_VERSIONS_DIR = os.path.join(os.path.dirname(__file__), "metrics_results_versions")
 
 
 class _CachedScore:
@@ -67,6 +69,18 @@ def load_metric_results(path: str = METRICS_RESULTS_PATH, sample_count: int | No
 def _save_metric_results(results: dict, sample_count: int, path: str = METRICS_RESULTS_PATH) -> None:
     with open(path, "w", encoding="utf-8") as file:
         json.dump({"sample_count": sample_count, "results": results}, file, indent=2)
+
+
+def _save_metric_version(results: dict, sample_count: int) -> str:
+    os.makedirs(METRICS_VERSIONS_DIR, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    version_path = os.path.join(
+        METRICS_VERSIONS_DIR,
+        f"metrics_results_{timestamp}.json",
+    )
+    with open(version_path, "w", encoding="utf-8") as file:
+        json.dump({"sample_count": sample_count, "results": results}, file, indent=2)
+    return version_path
 
 
 class _FallbackCompletions:
@@ -210,14 +224,21 @@ def _score_df(metric_key: str, samples: list, scores) -> pd.DataFrame:
 
 
 async def _batched_score(
-    metric, inputs: list, samples: list, status_cb=None, label: str = "", checkpoint: dict | None = None
+    metric,
+    inputs: list,
+    samples: list,
+    status_cb=None,
+    label: str = "",
+    checkpoint: dict | None = None,
+    checkpoint_key: str | None = None,
 ) -> list:
     """
     Runs abatch_score in chunks of GENERAL_BATCH_SIZE with cooldowns between chunks.
     Keeps each burst small enough for the configured provider limits.
     """
-    if checkpoint and label in checkpoint:
-        return [_CachedScore(value) for value in checkpoint[label]]
+    saved_key = checkpoint_key or label
+    if checkpoint and saved_key in checkpoint:
+        return [_CachedScore(value) for value in checkpoint[saved_key]]
 
     all_scores = []
     batches = [inputs[i : i + GENERAL_BATCH_SIZE] for i in range(0, len(inputs), GENERAL_BATCH_SIZE)]
@@ -288,7 +309,15 @@ async def run_all_metrics(
                 }
                 for s in samples
             ]
-            scores = await _batched_score(Faithfulness(llm=judge_llm), inputs, samples, status_cb, "Faithfulness", checkpoint)
+            scores = await _batched_score(
+                Faithfulness(llm=judge_llm),
+                inputs,
+                samples,
+                status_cb,
+                "Faithfulness",
+                checkpoint,
+                checkpoint_key="faithfulness",
+            )
             df = _score_df("faithfulness", samples, scores)
             save_metric("faithfulness", df)
             logfire.info("🧪 Faithfulness done", avg=round(df["faithfulness"].mean(), 3))
@@ -305,7 +334,12 @@ async def run_all_metrics(
             ]
             scores = await _batched_score(
                 AnswerRelevancy(llm=judge_llm, embeddings=ragas_embeddings),
-                inputs, samples, status_cb, "Answer Relevancy", checkpoint
+                inputs,
+                samples,
+                status_cb,
+                "Answer Relevancy",
+                checkpoint,
+                checkpoint_key="answer_relevancy",
             )
             df = _score_df("answer_relevancy", samples, scores)
             save_metric("answer_relevancy", df)
@@ -325,7 +359,15 @@ async def run_all_metrics(
                 }
                 for s in samples
             ]
-            scores = await _batched_score(ContextPrecision(llm=judge_llm), inputs, samples, status_cb, "Context Precision", checkpoint)
+            scores = await _batched_score(
+                ContextPrecision(llm=judge_llm),
+                inputs,
+                samples,
+                status_cb,
+                "Context Precision",
+                checkpoint,
+                checkpoint_key="context_precision",
+            )
             df = _score_df("context_precision", samples, scores)
             save_metric("context_precision", df)
             logfire.info("🧪 Context Precision done", avg=round(df["context_precision"].mean(), 3))
@@ -344,7 +386,15 @@ async def run_all_metrics(
                 }
                 for s in samples
             ]
-            scores = await _batched_score(ContextRecall(llm=judge_llm), inputs, samples, status_cb, "Context Recall", checkpoint)
+            scores = await _batched_score(
+                ContextRecall(llm=judge_llm),
+                inputs,
+                samples,
+                status_cb,
+                "Context Recall",
+                checkpoint,
+                checkpoint_key="context_recall",
+            )
             df = _score_df("context_recall", samples, scores)
             save_metric("context_recall", df)
             logfire.info("🧪 Context Recall done", avg=round(df["context_recall"].mean(), 3))
@@ -365,7 +415,12 @@ async def run_all_metrics(
             ]
             all_scores = await _batched_score(
                 AnswerCorrectness(llm=judge_llm, embeddings=ragas_embeddings),
-                inputs, samples, status_cb, "Answer Correctness", checkpoint
+                inputs,
+                samples,
+                status_cb,
+                "Answer Correctness",
+                checkpoint,
+                checkpoint_key="answer_correctness",
             )
             df = _score_df("answer_correctness", samples, all_scores)
             save_metric("answer_correctness", df)
@@ -373,5 +428,7 @@ async def run_all_metrics(
 
         if status_cb:
             status_cb("✅ All 5 experiments complete!")
+
+        _save_metric_version(checkpoint, len(samples))
 
     return results
