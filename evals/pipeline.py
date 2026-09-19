@@ -1,7 +1,7 @@
 """
 Phase 1 — Live Pipeline.
 Calls the running FastAPI /query endpoint for each golden sample.
-Captures: actual_response (truncated to 300 chars), actual_contexts (from sources),
+Captures: actual_response, actual_contexts (from sources),
 and actual_tools_called (detected from thought_process).
 """
 
@@ -15,7 +15,6 @@ import logfire
 
 API_URL = "http://localhost:8000/query"
 RESULTS_PATH = os.path.join(os.path.dirname(__file__), "live_pipeline_results.json")
-RESPONSE_TRUNCATE = 300
 DELAY_BETWEEN_CALLS = 10   # seconds — stays within Groq RPM on the main key
 REQUEST_TIMEOUT = 120      # seconds — guardrails + LangGraph + Groq can take >60s
 
@@ -74,8 +73,8 @@ def run_pipeline(golden_dataset: dict, progress_callback=None) -> dict:
                     thought_process = data.get("thought_process") or []
                     sources = data.get("sources") or []
 
-                    sample["actual_response"] = raw_answer[:RESPONSE_TRUNCATE]
-                    sample["actual_contexts"] = sources[:5]
+                    sample["actual_response"] = raw_answer
+                    sample["actual_contexts"] = sources
                     sample["actual_tools_called"] = [detect_tool(thought_process)]
 
                     logfire.info(

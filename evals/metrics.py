@@ -40,8 +40,6 @@ GENERAL_BATCH_SIZE = 1  # one sample at a time: abatch_score fires calls concurr
                          # so batch>1 stacks multiple samples' async calls inside the same second
 JUDGE_ATTEMPTS = 3
 JUDGE_RETRY_DELAY = 5
-CONTEXT_TRUNCATE = 300  # chars per context chunk — reduces single request from ~7,700 to ~400 tokens
-CONTEXT_LIMIT = 2       # number of context chunks passed to RAGAS per sample
 METRICS_RESULTS_PATH = os.path.join(os.path.dirname(__file__), "metrics_results.json")
 METRICS_VERSIONS_DIR = os.path.join(os.path.dirname(__file__), "metrics_results_versions")
 
@@ -200,19 +198,14 @@ async def _cooldown(seconds: int, label: str, status_cb=None):
 def _prep_samples(golden_dataset: dict) -> list:
     """
     Returns only samples with actual_response populated.
-    Truncates contexts to CONTEXT_TRUNCATE chars and limits to CONTEXT_LIMIT chunks
-    so a single RAGAS LLM call stays well under the 6,000 TPM ceiling.
-    (Live contexts from Qdrant are ~1,500 chars each — without truncation a single
-    Faithfulness request exceeds 7,000 tokens which hard-fails on the on_demand tier.)
+    Preserves the complete generated response and all retrieved contexts for scoring.
     """
     valid = []
     for s in golden_dataset["rag_samples"]:
         response = s.get("actual_response", "").strip()
         if not response:
             continue
-        raw_contexts = s.get("actual_contexts") or []
-        contexts = [c[:CONTEXT_TRUNCATE] for c in raw_contexts[:CONTEXT_LIMIT]]
-        valid.append({**s, "actual_contexts": contexts})
+        valid.append({**s, "actual_contexts": s.get("actual_contexts") or []})
     return valid
 
 
