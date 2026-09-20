@@ -2,7 +2,7 @@
 Phase 2 — RAGAS metrics.
 All LLM-based metrics use the Portkey eval route and its configured model fallbacks.
 Metrics run one sample at a time with cooldowns to reduce provider rate-limit pressure.
-Contexts are truncated to 300 chars (2 chunks max) so no single request exceeds the limit.
+Complete responses and retrieved contexts are passed to the judging step.
 """
 
 
@@ -292,7 +292,7 @@ async def run_all_metrics(
 
         # ── Exp 1: Faithfulness ───────────────────────────────────────────────
         if status_cb:
-            status_cb(f"🧪 Exp 1/6 — Faithfulness ({len(samples)} samples)...")
+            status_cb(f"🧪 Exp 1/5 — Faithfulness ({len(samples)} samples)...")
         with logfire.span("🧪 Exp 1 — Faithfulness"):
             inputs = [
                 {
@@ -319,7 +319,7 @@ async def run_all_metrics(
 
         # ── Exp 2: Answer Relevancy ───────────────────────────────────────────
         if status_cb:
-            status_cb(f"🧪 Exp 2/6 — Answer Relevancy ({len(samples)} samples)...")
+            status_cb(f"🧪 Exp 2/5 — Answer Relevancy ({len(samples)} samples)...")
         with logfire.span("🧪 Exp 2 — Answer Relevancy"):
             inputs = [
                 {"user_input": s["question"], "response": s["actual_response"]}
@@ -342,7 +342,7 @@ async def run_all_metrics(
 
         # ── Exp 3: Context Precision ──────────────────────────────────────────
         if status_cb:
-            status_cb(f"🧪 Exp 3/6 — Context Precision ({len(samples)} samples)...")
+            status_cb(f"🧪 Exp 3/5 — Context Precision ({len(samples)} samples)...")
         with logfire.span("🧪 Exp 3 — Context Precision"):
             inputs = [
                 {
@@ -369,7 +369,7 @@ async def run_all_metrics(
 
         # ── Exp 4: Context Recall ─────────────────────────────────────────────
         if status_cb:
-            status_cb(f"🧪 Exp 4/6 — Context Recall ({len(samples)} samples)...")
+            status_cb(f"🧪 Exp 4/5 — Context Recall ({len(samples)} samples)...")
         with logfire.span("🧪 Exp 4 — Context Recall"):
             inputs = [
                 {
@@ -396,7 +396,7 @@ async def run_all_metrics(
 
         # ── Exp 5: Answer Correctness (split into batches) ────────────────────
         if status_cb:
-            status_cb(f"🧪 Exp 5/6 — Answer Correctness batch 1/2...")
+            status_cb(f"🧪 Exp 5/5 — Answer Correctness batch 1/2...")
         with logfire.span("🧪 Exp 5 — Answer Correctness"):
             inputs = [
                 {

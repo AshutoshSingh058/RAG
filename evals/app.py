@@ -203,7 +203,7 @@ with tab2:
     st.markdown(
         "Sends each golden question to your **running FastAPI app** (`localhost:8000/query`). "
         "Captures the actual response, retrieved contexts, and tool called. "
-        "Responses are truncated to 300 chars to save tokens for the RAGAS judging step."
+        "Full responses and retrieved contexts are retained for the RAGAS judging step."
     )
     st.info(
         "⚠️ Make sure your FastAPI backend is running first: `uvicorn app.main:app --reload --port 8000`",
@@ -249,12 +249,11 @@ with tab2:
                 progress_bar.progress(pct, text=f"[{i+1}/{total}] Calling /query: {question[:60]}...")
             else:
                 short_q = question[:55] + "..." if len(question) > 55 else question
-                short_r = response[:80] + "..." if len(response) > 80 else response
                 st.session_state.pipeline_rows.append({
                     "#": i + 1,
                     "Question": short_q,
-                    "Live Response (truncated)": short_r if short_r else "⚠️ No response",
-                    "Status": "✅" if short_r else "❌",
+                    "Live Response": response if response else "⚠️ No response",
+                    "Status": "✅" if response else "❌",
                 })
                 live_table_slot.dataframe(
                     pd.DataFrame(st.session_state.pipeline_rows),
@@ -327,7 +326,7 @@ with tab2:
                 "#": s["id"],
                 "Domain": s["domain"].replace("_", " ").title(),
                 "Question": s["question"][:60],
-                "Live Response": s["actual_response"][:100] + "..." if len(s.get("actual_response","")) > 100 else s.get("actual_response",""),
+                "Live Response": s.get("actual_response", ""),
                 "Tool Called": s["actual_tools_called"][0] if s.get("actual_tools_called") else "—",
                 "Contexts Retrieved": len(s.get("actual_contexts", [])),
             })
