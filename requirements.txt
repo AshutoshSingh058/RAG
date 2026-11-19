@@ -1,58 +1,22 @@
-# ==============================================================================
-# ENTERPRISE AGENTIC RAG - REQUIREMENTS (Local, No GCP)
-# ==============================================================================
-# Stage 6 — Evals (final). Grows one stage at a time as the course progresses.
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
 
-# --- CORE API & WEB FRAMEWORK ---
-fastapi                     # High-performance web framework for the API
-uvicorn[standard]           # ASGI server to run the FastAPI app
-python-dotenv               # For loading configuration from .env files
-requests                    # HTTP library for internal/external API calls
-streamlit                   # Frontend chat interface + eval demo app
-numpy                       # Numerical processing
-pytz                        # Timezone handling for logs
-nest-asyncio                # Support for nested async loops in notebooks/streamlit
+qdrant-client
+pydantic>=2.0.0
 
-# --- GEMINI EMBEDDINGS ---
-google-generativeai         # Gemini API — embeddings (text-embedding-004 / gemini-embedding-001)
-langchain-google-genai      # LangChain integration for Gemini models
+langchain
+langgraph
+langchain-community
+langchain-openai
+langchain-google-genai
 
-# --- VECTOR DB & RETRIEVAL ---
-qdrant-client               # Vector Database for semantic search
-flashrank                   # Ultra-fast local cross-encoder for semantic reranking
+google-generativeai
+portkey-ai
 
-# --- LANGCHAIN & AGENTIC ORCHESTRATION ---
-langchain                   # Core LLM orchestration
-langgraph                   # State-machine logic for cyclic agent flows
-langchain-groq              # Integration for lightning-fast Llama 3.3 models (still used by the guardrails classifier)
-langchain-community         # Community-contributed tools and loaders
-langchain-openai            # OpenAI-compatible layer (used by Portkey gateway)
-pydantic>=2.0.0             # Data validation and settings management
+logfire[fastapi,requests]
+loguru
 
-# --- DATA INGESTION & DOCUMENT PARSING ---
-unstructured                # Base library for DOCX/PPTX partitioning
-python-pptx                 # Parser for PowerPoint files
-python-docx                 # Parser for Word documents
-pypdf                       # Local PDF text extraction (replaces Document AI)
-beautifulsoup4              # High-speed HTML text extraction
-pdfplumber                  # Fallback PDF parser for scanned/complex layouts
-
-# --- OBSERVABILITY & DISTRIBUTED TRACING ---
-langsmith                   # Specialized tracing for LangChain/LangGraph
-logfire[fastapi,requests]   # Pydantic Logfire — FastAPI + requests instrumentation
-loguru                      # Enhanced logging for Python
-
-# --- EMBEDDINGS (SENTENCE TRANSFORMERS) ---
-sentence-transformers       # Used by FlashRank reranker internally
-                            # ⚠️ NOTE: sentence-transformers/all-MiniLM-L6-v2 (~90MB) downloaded during eval Phase 2
-                            # Cached locally in ~/.cache/huggingface/hub/ after first run
-torchvision                 # Required by Transformers vision imports used during eval startup
-
-# --- GUARDRAILS ---
-nemoguardrails              # NVIDIA NeMo Guardrails for input/output safety rails
-langchain-nvidia-ai-endpoints # LangChain integration with NVIDIA AI Endpoints
-langchain-google-vertexai   # Required shim for NeMo Guardrails internal import (no GCP credentials needed)
-
-# --- LLM GATEWAY ---
-portkey-ai                  # Portkey Gateway for unified LLM routing, fallbacks & observability
-logfire
+pytz
+numpy

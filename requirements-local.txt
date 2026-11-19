@@ -1,0 +1,15 @@
+-r requirements.txt
+
+streamlit
+unstructured
+python-pptx
+python-docx
+pypdf
+beautifulsoup4
+pdfplumber
+sentence-transformers
+flashrank
+nemoguardrails
+langchain-groq
+langchain-nvidia-ai-endpoints
+langchain-google-vertexai

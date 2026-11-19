@@ -49,9 +49,15 @@ For local development and ingestion, use `EMBEDDINGS_MODE=local`. On Render, use
 
 ## Render dependency profile
 
-The Dockerfile uses `requirements-render.txt`, a runtime-only dependency set.
-Document parsing, local Sentence Transformers, FlashRank, and NeMo packages remain
-available in the local `requirements.txt` and are not installed on Render.
+The Dockerfile uses `requirements.txt`, a runtime-only dependency set.
+Document parsing, local Sentence Transformers, FlashRank, and NeMo packages are
+not installed on Render.
+
+For local development, install the full set from `requirements-local.txt`:
+
+```powershell
+pip install -r requirements-local.txt
+```
 
 ## Render backend
 
