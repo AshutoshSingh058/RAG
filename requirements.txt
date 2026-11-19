@@ -55,3 +55,4 @@ langchain-google-vertexai   # Required shim for NeMo Guardrails internal import 
 
 # --- LLM GATEWAY ---
 portkey-ai                  # Portkey Gateway for unified LLM routing, fallbacks & observability
+logfire
