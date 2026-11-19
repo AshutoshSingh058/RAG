@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: kubernetes-rag-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: QDRANT_CLUSTER_ENDPOINT
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: PORTKEY_API_KEY
+        sync: false
+      - key: PORTKEY_CONFIG
+        sync: false
+      - key: PORTKEY_PRIMARY_SLUG
+        sync: false
+      - key: PORTKEY_FALLBACK_SLUG
+        sync: false
+      - key: LOGFIRE_TOKEN
+        sync: false
+      - key: RESPONSE_MAX_TOKENS
+        value: "2048"

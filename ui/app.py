@@ -87,9 +87,14 @@ if prompt := st.chat_input("Ask about your documentation..."):
                     with logfire.span("📡 Calling RAG Backend"):
                         # Get backend URL from env, or default to local if not set
                         base_url = os.getenv("BACKEND_URL", "http://localhost:8000")
+                        try:
+                            base_url = st.secrets.get("BACKEND_URL", base_url)
+                        except Exception:
+                            pass
                         url = f"{base_url}/query"
                         payload = {"q": prompt, "thread_id": st.session_state.session_id}
-                        response = requests.post(url, json=payload, timeout=60)
+                        response = requests.post(url, json=payload, timeout=180)
+                        response.raise_for_status()
                         data = response.json()
                     
                     # Show Reasoning Steps from Backend

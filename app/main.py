@@ -11,9 +11,12 @@ logfire.configure(token=os.getenv("LOGFIRE_TOKEN"))
 
 # Now safe to import app modules - logfire is already active
 from fastapi import FastAPI, Response
+from fastapi.responses import JSONResponse
 from app.agents.graph import rag_agent
 from app.guardrails import initialize_rails, guard
 from app.services.retrieval.ranking_service import initialize_reranker
+from app.services.retrieval.qdrant_service import client as qdrant_client
+from app.config import settings
 
 from pydantic import BaseModel
 from typing import Optional
@@ -36,6 +39,27 @@ class QueryRequest(BaseModel):
 @app.get("/")
 def home():
     return {"message": "Kubernetes RAG API is live."}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.get("/ready")
+def ready():
+    try:
+        if not qdrant_client.collection_exists(settings.QDRANT_COLLECTION):
+            return JSONResponse(
+                status_code=503,
+                content={"status": "not_ready", "reason": "Qdrant collection missing"},
+            )
+        return {"status": "ready"}
+    except Exception as error:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "reason": str(error)},
+        )
 
 
 @app.get("/graph")
