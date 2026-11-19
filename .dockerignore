@@ -1,0 +1,12 @@
+.venv
+.git
+.gitignore
+.env
+.hf_cache
+.logfire
+__pycache__
+*.py[cod]
+processed_data
+evals
+DATA
+.DS_Store
