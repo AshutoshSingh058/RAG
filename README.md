@@ -36,6 +36,7 @@ PORTKEY_FALLBACK_SLUG=
 LOGFIRE_TOKEN=
 RESPONSE_MAX_TOKENS=2048
 BACKEND_URL=
+CORS_ORIGINS=
 ```
 
 Do not commit populated `.env` files.
@@ -67,4 +68,10 @@ Set `BACKEND_URL` in Streamlit secrets:
 
 ```toml
 BACKEND_URL = "https://your-render-service.onrender.com"
+```
+
+Set `CORS_ORIGINS` on Render if browser-based API calls are required:
+
+```env
+CORS_ORIGINS=https://your-app.streamlit.app
 ```

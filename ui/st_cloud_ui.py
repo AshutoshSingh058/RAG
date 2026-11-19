@@ -38,7 +38,7 @@ with st.sidebar:
     st.title("🧠 Agent OS")
     st.markdown("---")
 
-    base_url = st.secrets.get("BACKEND_URL", "http://localhost:8000")
+    base_url = st.secrets.get("BACKEND_URL")
 
     st.markdown("---")
     st.success(f"Logfire: {LOGFIRE_STATUS}")
@@ -74,6 +74,8 @@ if prompt := st.chat_input("Ask about your documentation..."):
             with st.status("🔍 Agent is thinking...", expanded=True) as status:
                 try:
                     with logfire.span("📡 Calling RAG Backend"):
+                        if not base_url:
+                            raise RuntimeError("BACKEND_URL is not configured.")
                         url = f"{base_url}/query"
                         payload = {"q": prompt, "thread_id": st.session_state.session_id}
                         response = requests.post(url, json=payload, timeout=180)

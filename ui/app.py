@@ -86,11 +86,13 @@ if prompt := st.chat_input("Ask about your documentation..."):
                     # DISTRIBUTED TRACE: Calling Backend
                     with logfire.span("📡 Calling RAG Backend"):
                         # Get backend URL from env, or default to local if not set
-                        base_url = os.getenv("BACKEND_URL", "http://localhost:8000")
+                        base_url = os.getenv("BACKEND_URL")
                         try:
                             base_url = st.secrets.get("BACKEND_URL", base_url)
                         except Exception:
                             pass
+                        if not base_url:
+                            raise RuntimeError("BACKEND_URL is not configured.")
                         url = f"{base_url}/query"
                         payload = {"q": prompt, "thread_id": st.session_state.session_id}
                         response = requests.post(url, json=payload, timeout=180)

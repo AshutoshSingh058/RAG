@@ -12,6 +12,7 @@ logfire.configure(token=os.getenv("LOGFIRE_TOKEN"))
 # Now safe to import app modules - logfire is already active
 from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.agents.graph import rag_agent
 from app.guardrails import initialize_rails, guard
 from app.services.retrieval.ranking_service import initialize_reranker
@@ -24,6 +25,20 @@ from typing import Optional
 
 # Initialize FastAPI
 app = FastAPI(title="Kubernetes RAG API")
+
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
