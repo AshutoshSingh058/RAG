@@ -1,12 +1,6 @@
 import logfire
 import re
-from app.gateway import get_langchain_llm
-from app.guardrails.colang_rules import COLANG_CONTENT, YAML_CONTENT, RAIL_INDICATORS
 from app.services.retrieval.embedding import embed_query
-from app.config import settings
-
-_rails = None
-
 TOPIC = "Kubernetes"
 TOPIC_ANCHORS = (
     "Kubernetes cluster and container orchestration",
@@ -77,38 +71,6 @@ _CONVERSATIONAL_PATTERNS = (
 )
 
 
-def initialize_rails() -> None:
-    """
-    Build the NeMo LLMRails singleton at app startup.
-    Uses the Portkey-backed LLM for intent classification at the gate, keeping
-    authentication and model routing consistent with the RAG pipeline.
-    """
-    global _rails
-
-    if settings.EMBEDDINGS_MODE == "gemini":
-        logfire.info("Low-RAM mode: NeMo guardrails disabled.")
-        _rails = None
-        return
-
-    from nemoguardrails import RailsConfig, LLMRails
-
-    guard_llm = get_langchain_llm(feature="guardrails")
-        
-    logfire.info(
-        f"Guardrails LLM: "
-        f"{guard_llm.model_name if hasattr(guard_llm, 'model_name') else guard_llm}"
-    )
-    
-    config = RailsConfig.from_content(
-        colang_content=COLANG_CONTENT,
-        yaml_content=YAML_CONTENT
-    )
-    _rails = LLMRails(config, llm=guard_llm)
-    logfire.info("🛡️ NeMo Guardrails initialised via Portkey gateway.")
-    
-    
-
-
 def guard(message: str) -> tuple[bool, str | None]:
     """
     Run a user message through the NeMo rails gate.
@@ -136,10 +98,6 @@ def guard(message: str) -> tuple[bool, str | None]:
             similarity=round(similarity, 4),
         )
         return True, "I'm your Kubernetes assistant, so I can only answer Kubernetes-related questions. Please ask about Pods, Deployments, Services, Jobs, CronJobs, networking, storage, or cluster operations."
-
-    if _rails is None:
-        logfire.warning("⚠️ Guardrails not initialised — skipping gate.")
-        return False, None
 
     logfire.info("✅ Semantic topic check passed.")
     return False, None

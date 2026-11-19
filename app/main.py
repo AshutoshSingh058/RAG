@@ -14,7 +14,7 @@ from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.agents.graph import rag_agent
-from app.guardrails import initialize_rails, guard
+from app.guardrails import guard
 from app.services.retrieval.ranking_service import initialize_reranker
 from app.services.retrieval.qdrant_service import client as qdrant_client
 from app.config import settings
@@ -45,9 +45,6 @@ app.add_middleware(
 def startup_event():
     if settings.EMBEDDINGS_MODE == "gemini":
         logfire.info("Low-RAM mode: skipping NeMo and local reranker startup.")
-    else:
-        initialize_rails()
-        initialize_reranker()
 
 class QueryRequest(BaseModel):
     q: str
