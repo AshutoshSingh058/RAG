@@ -5,12 +5,6 @@ from app.guardrails.colang_rules import COLANG_CONTENT, YAML_CONTENT, RAIL_INDIC
 from app.services.retrieval.embedding import embed_query
 from app.config import settings
 
-RailsConfig = None
-LLMRails = None
-if settings.EMBEDDINGS_MODE != "gemini":
-    from nemoguardrails import RailsConfig, LLMRails
-
-
 _rails = None
 
 TOPIC = "Kubernetes"
@@ -90,6 +84,13 @@ def initialize_rails() -> None:
     authentication and model routing consistent with the RAG pipeline.
     """
     global _rails
+
+    if settings.EMBEDDINGS_MODE == "gemini":
+        logfire.info("Low-RAM mode: NeMo guardrails disabled.")
+        _rails = None
+        return
+
+    from nemoguardrails import RailsConfig, LLMRails
 
     guard_llm = get_langchain_llm(feature="guardrails")
         
