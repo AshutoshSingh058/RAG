@@ -9,7 +9,6 @@ MODEL_BY_FEATURE = {
     "guardrails": settings.GUARDRAILS_MODEL,
     "planner": settings.PLANNER_MODEL,
     "chat": settings.CHAT_MODEL,
-    "eval": settings.EVAL_MODEL,
 }
 
 

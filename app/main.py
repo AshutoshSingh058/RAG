@@ -13,18 +13,20 @@ logfire.configure(token=os.getenv("LOGFIRE_TOKEN"))
 from fastapi import FastAPI, Response
 from app.agents.graph import rag_agent
 from app.guardrails import initialize_rails, guard
+from app.services.retrieval.ranking_service import initialize_reranker
 
 from pydantic import BaseModel
 from typing import Optional
 
 
 # Initialize FastAPI
-app = FastAPI(title="Enterprise Agentic RAG API")
+app = FastAPI(title="Kubernetes RAG API")
 
 
 @app.on_event("startup")
 def startup_event():
     initialize_rails()
+    initialize_reranker()
 
 class QueryRequest(BaseModel):
     q: str
@@ -33,7 +35,7 @@ class QueryRequest(BaseModel):
 
 @app.get("/")
 def home():
-    return {"message": "Enterprise LangGraph RAG API is live."}
+    return {"message": "Kubernetes RAG API is live."}
 
 
 @app.get("/graph")

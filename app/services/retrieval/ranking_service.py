@@ -22,6 +22,11 @@ def _get_ranker() -> Ranker:
     return _ranker
 
 
+def initialize_reranker() -> None:
+    """Load the local reranker during startup instead of on the first query."""
+    _get_ranker()
+
+
 
 def rerank_documents(query: str, documents: list[str], top_n: int = 5) -> list[str]:
     """

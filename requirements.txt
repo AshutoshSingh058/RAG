@@ -55,11 +55,3 @@ langchain-google-vertexai   # Required shim for NeMo Guardrails internal import 
 
 # --- LLM GATEWAY ---
 portkey-ai                  # Portkey Gateway for unified LLM routing, fallbacks & observability
-
-# --- EVALUATION (EVALS) ---
-ragas                       # RAG-specific evaluation metrics (Faithfulness, Relevancy, Recall)
-deepeval                    # Pytest-compatible test runner wrapping RAGAS & safety metrics
-langfuse                    # Live production monitoring, tracing & user feedback collection
-pandas                      # DataFrames for the eval Streamlit app's result tables
-openai>=2.0.0,<3.0.0        # AsyncOpenAI client used directly by the RAGAS judge LLM
-jiter>=0.6.1,<0.15          # Version range required by Instructor, used by RAGAS

@@ -16,7 +16,7 @@ except Exception:
 
 # --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="Enterprise Agentic RAG",
+    page_title="Kubernetes RAG Application",
     page_icon="🤖",
     layout="wide",
 )
@@ -51,7 +51,7 @@ with st.sidebar:
         st.rerun()
 
 # --- MAIN CHAT ---
-st.title("🤖 Enterprise Agentic Assistant")
+st.title("🤖 Kubernetes Assistant")
 
 # Display history
 for message in st.session_state.messages:

@@ -13,7 +13,7 @@ client = QdrantClient(
 
 def search_enterprise_knowledge(query: str, limit: int = 8):
     """
-    Performs a high-precision search in the enterprise knowledge base.
+    Performs a high-precision search in the Kubernetes knowledge base.
     Uses the modern query_points interface.
     """
     try:

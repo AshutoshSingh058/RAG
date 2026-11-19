@@ -12,3 +12,6 @@ wheels/
 
 # HuggingFace model cache (persistent in venv, not committed)
 .hf_cache/
+
+# Generated processed document metadata
+processed_data/

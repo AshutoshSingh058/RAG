@@ -25,7 +25,9 @@ def generate_node(state: AgentState):
     if query == "CONVERSATIONAL":
         logfire.info("Generating conversational response using memory.")
         prompt = f"""
-        You are a friendly and helpful Enterprise AI Assistant.
+        You are a helpful Kubernetes assistant.
+        Answer briefly and concisely. Use the shortest useful explanation and
+        avoid unnecessary detail unless the user explicitly asks for it.
         Answer the user's latest message using the CONVERSATION HISTORY below.
 
         CONVERSATION HISTORY:
@@ -49,6 +51,8 @@ def generate_node(state: AgentState):
         prompt = f"""
         You are a Senior Technical Architect.
         Answer the question using the TECHNICAL CONTEXT provided.
+        Be concise and direct. Lead with the answer, use short bullets or
+        short steps when helpful, and avoid unnecessary explanation.
 
         TECHNICAL CONTEXT:
         {full_context}

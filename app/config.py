@@ -37,12 +37,8 @@ class Settings:
     CHAT_MODEL = os.getenv(
         "CHAT_MODEL", f"@{PORTKEY_PRIMARY_SLUG}/openai/gpt-oss-120b"
     )
-    RESPONSE_MAX_TOKENS = int(os.getenv("RESPONSE_MAX_TOKENS", "1024"))
+    RESPONSE_MAX_TOKENS = int(os.getenv("RESPONSE_MAX_TOKENS", "2048"))
     HISTORY_MAX_CHARS = int(os.getenv("HISTORY_MAX_CHARS", "8000"))
-    EVAL_MODEL = os.getenv(
-        "EVAL_MODEL", f"@{PORTKEY_PRIMARY_SLUG}/openai/gpt-oss-20b"
-    )
-
     # Candidate fallbacks from the provider catalog, ordered by preference.
     MODEL_FALLBACKS = {
         "planner": [f"@{PORTKEY_FALLBACK_SLUG}/openai/gpt-oss-20b"],
@@ -53,20 +49,6 @@ class Settings:
         "guardrails": [
             f"@{PORTKEY_FALLBACK_SLUG}/openai/gpt-oss-safeguard-20b"
         ],
-        "eval": [f"@{PORTKEY_FALLBACK_SLUG}/openai/gpt-oss-20b"],
     }
-
-    
-    # # --- OBSERVABILITY ---
-    # LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "true")
-    # LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
-    # LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT", "rag_scale_test")
-    # LANGSMITH_ENDPOINT = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
-
-# # Apply LangChain environment variables for automatic tracing
-# os.environ["LANGCHAIN_TRACING_V2"] = os.getenv("LANGSMITH_TRACING", "true")
-# os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY", "")
-# os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGSMITH_PROJECT", "rag_scale_test")
-# os.environ["LANGCHAIN_ENDPOINT"] = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
 
 settings = Settings()
