@@ -47,6 +47,12 @@ Do not commit populated `.env` files.
 For local development and ingestion, use `EMBEDDINGS_MODE=local`. On Render, use
 `EMBEDDINGS_MODE=gemini` so the server does not load the local embedding model.
 
+## Render dependency profile
+
+The Dockerfile uses `requirements-render.txt`, a runtime-only dependency set.
+Document parsing, local Sentence Transformers, FlashRank, and NeMo packages remain
+available in the local `requirements.txt` and are not installed on Render.
+
 ## Render backend
 
 Render can deploy the included Dockerfile using [render.yaml](render.yaml).

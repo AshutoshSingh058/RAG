@@ -5,8 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+COPY requirements-render.txt .
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements-render.txt
 
 COPY app ./app
 COPY ui ./ui

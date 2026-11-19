@@ -1,13 +1,17 @@
 import logfire
 import re
-from nemoguardrails import RailsConfig, LLMRails
-
 from app.gateway import get_langchain_llm
 from app.guardrails.colang_rules import COLANG_CONTENT, YAML_CONTENT, RAIL_INDICATORS
 from app.services.retrieval.embedding import embed_query
+from app.config import settings
+
+RailsConfig = None
+LLMRails = None
+if settings.EMBEDDINGS_MODE != "gemini":
+    from nemoguardrails import RailsConfig, LLMRails
 
 
-_rails: LLMRails | None = None
+_rails = None
 
 TOPIC = "Kubernetes"
 TOPIC_ANCHORS = (

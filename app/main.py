@@ -43,8 +43,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
-    initialize_rails()
-    if settings.EMBEDDINGS_MODE != "gemini":
+    if settings.EMBEDDINGS_MODE == "gemini":
+        logfire.info("Low-RAM mode: skipping NeMo and local reranker startup.")
+    else:
+        initialize_rails()
         initialize_reranker()
 
 class QueryRequest(BaseModel):
