@@ -16,6 +16,9 @@ class Settings:
     
     # --- GEMINI EMBEDDINGS ---
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    EMBEDDINGS_MODE = os.getenv("EMBEDDINGS_MODE", "local").strip().lower()
+    EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL", "all-mpnet-base-v2")
+    EMBEDDINGS_DIM = int(os.getenv("EMBEDDINGS_DIM", "768"))
 
     # --- VECTOR DB (QDRANT) ---
     QDRANT_URL = os.getenv("QDRANT_CLUSTER_ENDPOINT")

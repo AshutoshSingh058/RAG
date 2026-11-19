@@ -37,9 +37,15 @@ LOGFIRE_TOKEN=
 RESPONSE_MAX_TOKENS=2048
 BACKEND_URL=
 CORS_ORIGINS=
+EMBEDDINGS_MODE=gemini
+EMBEDDINGS_MODEL=all-mpnet-base-v2
+EMBEDDINGS_DIM=768
 ```
 
 Do not commit populated `.env` files.
+
+For local development and ingestion, use `EMBEDDINGS_MODE=local`. On Render, use
+`EMBEDDINGS_MODE=gemini` so the server does not load the local embedding model.
 
 ## Render backend
 

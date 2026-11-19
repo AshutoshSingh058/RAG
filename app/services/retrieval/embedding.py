@@ -4,11 +4,9 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from app.config import settings
 
 BATCH_SIZE = 50
-_GEMINI_DIM = 3072
-_FALLBACK_DIM = 768  # all-mpnet-base-v2
 
 _active_model = None
-_model_type: str | None = None  # "gemini" or "fallback"
+_model_type: str | None = None  # "gemini" or "local"
 
 
 # ── Model initialisation ───────────────────────────────────────────────────────
@@ -19,19 +17,20 @@ def _probe_gemini():
         model = GoogleGenerativeAIEmbeddings(
             model="models/gemini-embedding-2-preview",
             google_api_key=settings.GEMINI_API_KEY,
+            output_dimensionality=settings.EMBEDDINGS_DIM,
         )
         model.embed_query("probe")
-        logfire.info("Gemini embeddings ready (gemini-embedding-2-preview, 3072-dim).")
+        logfire.info(f"Gemini embeddings ready (gemini-embedding-2-preview, {settings.EMBEDDINGS_DIM}-dim).")
         return model
     except Exception as e:
-        logfire.warning(f"Gemini probe failed: {e}. Will use sentence-transformers fallback.")
-        return None
+        logfire.error(f"Gemini embedding initialization/probe failed: {e}")
+        raise
 
 
-def _load_fallback():
+def _load_local():
     from sentence_transformers import SentenceTransformer
-    logfire.info("Loading sentence-transformers fallback (all-mpnet-base-v2, 768-dim).")
-    return SentenceTransformer("all-mpnet-base-v2")
+    logfire.info(f"Loading sentence-transformers model ({settings.EMBEDDINGS_MODEL}, {settings.EMBEDDINGS_DIM}-dim).")
+    return SentenceTransformer(settings.EMBEDDINGS_MODEL)
 
 
 def _init():
@@ -40,8 +39,12 @@ def _init():
     if _active_model is not None:
         return
 
-    _active_model = _load_fallback()
-    _model_type = "fallback"
+    if settings.EMBEDDINGS_MODE == "gemini":
+        _active_model = _probe_gemini()
+        _model_type = "gemini"
+    else:
+        _active_model = _load_local()
+        _model_type = "local"
 
 
 # ── Public helpers ─────────────────────────────────────────────────────────────
@@ -49,7 +52,7 @@ def _init():
 def get_embedding_dim() -> int:
     """Return the vector dimension for the active model. Call after _init()."""
     _init()
-    return _GEMINI_DIM if _model_type == "gemini" else _FALLBACK_DIM
+    return settings.EMBEDDINGS_DIM
 
 
 # ── Batch embedding with retry ─────────────────────────────────────────────────

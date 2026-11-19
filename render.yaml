@@ -21,6 +21,14 @@ services:
         sync: false
       - key: LOGFIRE_TOKEN
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: EMBEDDINGS_MODE
+        value: "gemini"
+      - key: EMBEDDINGS_MODEL
+        value: "all-mpnet-base-v2"
+      - key: EMBEDDINGS_DIM
+        value: "768"
       - key: RESPONSE_MAX_TOKENS
         value: "2048"
       - key: CORS_ORIGINS
